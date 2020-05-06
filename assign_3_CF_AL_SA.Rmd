@@ -91,9 +91,9 @@ under the status quo (locally and in the rest of the world)?
 
 
 ```{r}
-integrate(local_env_cost, 0, agg_curve_intersect)$value
-integrate(global_env_cost, 0, agg_curve_intersect)$value
-integrate(total_env_cost, 0, agg_curve_intersect)$value
+integrate(local_env_cost, 0, agg_curve_intersect)$value # 881223.6
+integrate(global_env_cost, 0, agg_curve_intersect)$value # 293741.2
+integrate(total_env_cost, 0, agg_curve_intersect)$value # 1174965
 
 ```
 
