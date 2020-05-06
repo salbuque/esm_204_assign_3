@@ -78,45 +78,11 @@ ggplot()+
   
   scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
 
-#a data vs. estimate high
-#ggplot()+
-#   geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars))+
-
-
 
 ```
 ```{r}
-# aggregate Demand
-
-
-#gen_demand_curves <- function(I1,I2,S1,S2) {
-#  high_demand <<- function(q){I1+S1*q}
-#  low_demand <<- function(q){I2+S2*q}
-#  demand_dom <<- function(q){
-#    if (I1==I2){0}
-#    else if(I1>I2){low_demand(q)}
-#    else if(I2>I1){high_demand(q)}
-#  }
-# 
-#  intersect_point <<- uniroot(function(q){
-#    if (I1==I2){0}
-#    else if(I1>I2){b_demand(q)-I2}
-#    else if(I2>I1){s_demand(q)-I1}},
-#    interval = c(0,1),extendInt = "yes")
-# 
-#  demand_agg <<- function(q){
-#    ifelse(q<intersect_point$root,demand_dom(q),((S2*I1+S1*I2)/(S2+S1))+((S1*S2)/(S1+S2))*q)
-#    }
-# 
-#}
-
-agg_curve_intersect <- uniroot(function(q){agg_demand(q)-3},interval = c(0,1),extendInt = "yes")
-#a data vs. estimate agg
-ggplot()+
-   geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
-  #stat_function(aes(x, color = "aggregate"), fun = demand_agg)+
-  stat_function(aes(x, color = "supply"), fun = supply)+
-  ylim(0,14)
+# find intersect of aggregate curve at P = $3.00 Q = 587371.512
+agg_curve_intersect <- uniroot(function(q){agg_demand(q)-3},interval = c(0,1),extendInt = "yes")$root
   
 ```
 
