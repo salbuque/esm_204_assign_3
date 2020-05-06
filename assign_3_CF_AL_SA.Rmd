@@ -40,12 +40,9 @@ I1<-  lm_low$coefficients[1]
 I2<-  lm_high$coefficients[1]
 S1<-  lm_low$coefficients[2]
 S2<-  lm_high$coefficients[2]
-
+low_demand <<- function(q)  I1 + (S1*q)
+high_demand <<- function(q) I2 + (S2*q)
 agg_demand <- function(q) {
-  
-  low_demand <<- function(q)  I1 + (S1*q)
-  
-  high_demand <<- function(q) I2 + (S2*q)
   
   demand_dom <<- function(q){
     if (I1==I2){0}
@@ -92,12 +89,14 @@ agg_curve_intersect <- uniroot(function(q){agg_demand(q)-supply(q)},interval = c
 What is the environmental cost
 under the status quo (locally and in the rest of the world)?
 
+
 ```{r}
 integrate(local_env_cost, 0, agg_curve_intersect)$value
 integrate(global_env_cost, 0, agg_curve_intersect)$value
 integrate(total_env_cost, 0, agg_curve_intersect)$value
 
 ```
+
 ---
 2. How is the current consumer benefit divided between “High” and “Low” income
 consumers?
