@@ -31,14 +31,24 @@ lm_agg <- lm(price_dollars ~ q_aggregrate, data=cost_gas_data)
 print(lm_agg)  #  1.500e+01 + -2.043e-05*q
 
 ```
-```{r}
-# assert formulas for demand 
-low_demand<<- function(q) 1.169e+01 + -6.611e-05*q
-high_demand<<- function(q) 1.580e+01 + -2.731e-05*q
-agg_demand<<- function(q) 1.500e+01 + -2.043e-05*q
-supply<<-function(q) 3
 
-x =100000: 250000
+
+```{r}
+I1<- 1.169e+01
+I2<- 1.580e+01
+S1<- -6.611e-05
+S2<- -2.731e-05
+low_demand <<- function(q) I1 + (S1*q)
+high_demand <<- function(q) I2 + (S2*q)
+supply <<- function(q)  3 + (.1*q)
+
+x<- 0:300 # define scale
+
+```
+
+```{r}
+
+# Visualize 
 #a data vs. estimate Low
 ggplot()+
   stat_function(aes(x, color = "low"), fun = low_demand)+
@@ -59,5 +69,4 @@ ggplot()+
   
 ggsave("fitted_model_a.jpg")
 ```
-
 
