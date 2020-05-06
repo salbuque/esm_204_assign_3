@@ -41,7 +41,7 @@ S1<- -6.611e-05
 S2<- -2.731e-05
 low_demand <<- function(q) I1 + (S1*q)
 high_demand <<- function(q) I2 + (S2*q)
-supply <<- function(q)  3 + (.1*q)
+supply <<- function(q)  3 + (.0000*q)
 
 x<- 0:300 # define scale
 
@@ -52,8 +52,8 @@ x<- 0:300 # define scale
 # Visualize 
 #a data vs. estimate Low
 ggplot()+
-  stat_function(aes(x, color = "low"), fun = low_demand)+
-  stat_function(aes(x, color = "supply"), fun = supply)+ 
+   geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars))+
+  stat_function(aes(x, color = "Low"), fun = low_demand)+ 
   scale_y_continuous(0,6)
 
 #a data vs. estimate high
@@ -68,6 +68,10 @@ ggplot()+
   stat_function(aes(x, color = "aggregate"), fun = agg_demand)+
   stat_function(aes(x, color = "supply"), fun = supply)
   
-ggsave("fitted_model_a.jpg")
+```
+```{r}
+# aggregate Demand
+
+
 ```
 
