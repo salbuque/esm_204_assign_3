@@ -16,7 +16,18 @@ library(dplyr)
 ```{r}
 #readin Data
 cost_gas_data<- read_csv("assign_3_data.csv") %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(q_aggregate = sum(q_low_gallons + q_high_gallons))
 
 ```
+```{r}
+# Linear Regression Low Cost Consumer 
+lm_low <- lm(price_dollars ~ q_low_gallons, data=cost_gas_data) 
+print(lm_low)  #  11.69 + -6.611X10^-05
+# Linear Regression High Cost Consumer
+lm_high <- lm(price_dollars ~ q_high_gallons, data=cost_gas_data) 
+print(lm_high)  #  1.580 x 10^1 + -2.731X10^-05
+
+```
+
 
