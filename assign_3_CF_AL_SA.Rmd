@@ -73,5 +73,25 @@ ggplot()+
 # aggregate Demand
 
 
+gen_demand_curves <- function(I1,I2,S1,S2) {
+  high_demand <<- function(q){I1+S1*q}
+  low_demand <<- function(q){I2+S2*q}
+  demand_dom <<- function(q){
+    if (I1==I2){0}
+    else if(I1>I2){low_demand(q)}
+    else if(I2>I1){high_demand(q)}
+  }
+ 
+  intersect_point <<- uniroot(function(q){
+    if (I1==I2){0}
+    else if(I1>I2){b_demand(q)-I2}
+    else if(I2>I1){s_demand(q)-I1}},
+    interval = c(0,1),extendInt = "yes")
+ 
+  demand_agg <<- function(q){
+    ifelse(q<intersect_point$root,demand_dom(q),((S2*I1+S1*I2)/(S2+S1))+((S1*S2)/(S1+S2))*q)
+    }
+ 
+}
 ```
 
