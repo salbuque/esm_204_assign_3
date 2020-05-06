@@ -32,7 +32,8 @@ lm_agg <- lm(price_dollars ~ q_aggregrate, data=cost_gas_data)
 print(lm_agg)  #  1.500e+01 + -2.043e-05*q
 
 ```
-
+Aggregate daily demand curve for gasoline & supply curve
+for gasoline
 
 ```{r}
 I1<-  lm_low$coefficients[1] 
@@ -57,15 +58,15 @@ agg_demand <- function(q) {
   ifelse(q<abs(intersect_point$root),demand_dom(q),lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
 }
 supply <- function(q)  3 + (.0000*q)
+local_env_cost<- function(q) 1.5 + (.0000*q) # local MEC $ 1.50
+global_env_cost<- function(q) .50 + (.0000*q) # global MEC $.50
+total_env_cost<- function(q) 2+ (.0000*q)# total MEC $.50
 
 x<- 0:300 # define scale
 
 ```
 
 ```{r}
-
-# Visualize 
-#a data vs. estimate Low
 ggplot()+
   geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars))+
   stat_function(aes(x, color = "Low"), fun = low_demand)+ 
@@ -74,15 +75,29 @@ ggplot()+
   geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
   stat_function(aes(x, color = "Aggregrate"), fun = agg_demand)+
   stat_function(aes(x, color = "supply"), fun = supply)  +
-  xlim(0,200000)
-  
+  xlim(0,200000)+ 
   scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
 
 
 ```
+
+What is the “benefit” to consumers under the status quo? What is
+the “benefit” to producers under the status quo? 
 ```{r}
-# find intersect of aggregate curve at P = $3.00 Q = 587371.512
-agg_curve_intersect <- uniroot(function(q){agg_demand(q)-3},interval = c(0,1),extendInt = "yes")$root
+# find intersect of aggregate curve at P = $3.00 Q = 587482.43
+agg_curve_intersect <- uniroot(function(q){agg_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
   
 ```
 
+What is the environmental cost
+under the status quo (locally and in the rest of the world)?
+
+```{r}
+integrate(local_env_cost, 0, agg_curve_intersect)$value
+integrate(global_env_cost, 0, agg_curve_intersect)$value
+integrate(total_env_cost, 0, agg_curve_intersect)$value
+
+```
+---
+2. How is the current consumer benefit divided between “High” and “Low” income
+consumers?
