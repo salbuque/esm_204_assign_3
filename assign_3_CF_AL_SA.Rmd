@@ -18,8 +18,8 @@ library(dplyr)
 #readin Data
 cost_gas_data<- read_csv("assign_3_data.csv") %>% 
   clean_names()
-
 ```
+
 ```{r}
 # Linear Regression Low Cost Consumer 
 lm_low <- lm(price_dollars ~ q_low_gallons, data=cost_gas_data) 
