@@ -62,12 +62,7 @@ ggplot()+
   stat_function(aes(x, color = "high"), fun = high_demand)+
   stat_function(aes(x, color = "supply"), fun = supply)
 
-#a data vs. estimate agg
-ggplot()+
-   geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
-  stat_function(aes(x, color = "aggregate"), fun = agg_demand)+
-  stat_function(aes(x, color = "supply"), fun = supply)
-  
+
 ```
 ```{r}
 # aggregate Demand
@@ -93,5 +88,13 @@ gen_demand_curves <- function(I1,I2,S1,S2) {
     }
  
 }
+
+
+#a data vs. estimate agg
+ggplot()+
+   geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
+  stat_function(aes(x, color = "aggregate"), fun = demand_agg)+
+  stat_function(aes(x, color = "supply"), fun = supply)
+  
 ```
 
