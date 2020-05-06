@@ -5,4 +5,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(wesanderson)
+library(dplyr)
 ```
+
+```{r}
+#readin Data
+cost_gas_data<- read_csv("assign_3_data.csv") %>% 
+  clean_names()
+
+```
+
