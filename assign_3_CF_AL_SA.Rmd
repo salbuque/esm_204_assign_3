@@ -2,3 +2,63 @@
 title: "assign_3_CF_AL_SA"
 output: html_document
 ---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(wesanderson)
+library(dplyr)
+```
+
+```{r}
+#readin Data
+cost_gas_data<- read_csv("assign_3_data.csv") %>% 
+  clean_names()
+
+```
+```{r}
+# Linear Regression Low Cost Consumer 
+lm_low <- lm(price_dollars ~ q_low_gallons, data=cost_gas_data) 
+print(lm_low)  #  1.169e+01 + -6.611e-05*q
+# Linear Regression High Cost Consumer
+lm_high <- lm(price_dollars ~ q_high_gallons, data=cost_gas_data) 
+print(lm_high)  #  1.580e+01 + -2.731e-05*q
+# Linear Regression Aggregate Cost Consumer
+lm_agg <- lm(price_dollars ~ q_aggregrate, data=cost_gas_data) 
+print(lm_agg)  #  1.500e+01 + -2.043e-05*q
+
+```
+```{r}
+# assert formulas for demand 
+low_demand<<- function(q) 1.169e+01 + -6.611e-05*q
+high_demand<<- function(q) 1.580e+01 + -2.731e-05*q
+agg_demand<<- function(q) 1.500e+01 + -2.043e-05*q
+supply<<-function(q) 3
+
+x =100000: 250000
+#a data vs. estimate Low
+ggplot()+
+  stat_function(aes(x, color = "low"), fun = low_demand)+
+  stat_function(aes(x, color = "supply"), fun = supply)+ 
+  scale_y_continuous(0,6)
+
+#a data vs. estimate high
+ggplot()+
+   geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars))+
+  stat_function(aes(x, color = "high"), fun = high_demand)+
+  stat_function(aes(x, color = "supply"), fun = supply)
+
+#a data vs. estimate agg
+ggplot()+
+   geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
+  stat_function(aes(x, color = "aggregate"), fun = agg_demand)+
+  stat_function(aes(x, color = "supply"), fun = supply)
+  
+ggsave("fitted_model_a.jpg")
+```
+
+
