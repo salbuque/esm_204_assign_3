@@ -1,102 +1,181 @@
 ---
-title: "assign_3_CF_AL_SA"
+title: "ESM204 Assignment 3"
+author: "Simone Albuquerque, Claudia Flores, and Anthony Luna"
 output: html_document
 ---
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyr)
 library(tidyverse)
 library(janitor)
 library(ggplot2)
 library(wesanderson)
 library(dplyr)
+library(scales)
 ```
 
-```{r}
+```{r read}
 #readin Data
 cost_gas_data<- read_csv("assign_3_data.csv") %>% 
   clean_names()
 ```
 
-```{r}
+
+
+```{r lm_setup}
 # Linear Regression Low Cost Consumer 
 lm_low <- lm(price_dollars ~ q_low_gallons, data=cost_gas_data) 
-print(lm_low)  #  1.169e+01 + -6.611e-05*q
+#print(lm_low)  #  1.169e+01 + -6.611e-05*q
 # Linear Regression High Cost Consumer
 lm_high <- lm(price_dollars ~ q_high_gallons, data=cost_gas_data) 
-print(lm_high)  #  1.580e+01 + -2.731e-05*q
+#print(lm_high)  #  1.580e+01 + -2.731e-05*q
 # Linear Regression Aggregate Cost Consumer
 lm_agg <- lm(price_dollars ~ q_aggregrate, data=cost_gas_data) 
-print(lm_agg)  #  1.500e+01 + -2.043e-05*q
+#print(lm_agg)  #  1.500e+01 + -2.043e-05*q
 
 ```
-Aggregate daily demand curve for gasoline & supply curve
-for gasoline
 
-```{r}
+
+```{r fun_setup}
+# Demand Curve Coefficients based on linear models
 I1<-  lm_low$coefficients[1] 
 I2<-  lm_high$coefficients[1]
 S1<-  lm_low$coefficients[2]
 S2<-  lm_high$coefficients[2]
-low_demand <<- function(q)  I1 + (S1*q)
-high_demand <<- function(q) I2 + (S2*q)
-agg_demand <- function(q) {
-  
-  demand_dom <<- function(q){
-    if (I1==I2){0}
-    else if(I1>I2){low_demand(q)}
-    else if(I2>I1){high_demand(q)}
-  }
-  
-  intersect_point <<- uniroot(function(q){high_demand(q)-low_demand(q)},interval = c(0,1),extendInt = "yes")
-  
-  ifelse(q<abs(intersect_point$root),demand_dom(q),lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
+
+# functional definition of high and low demand based on linear model
+low_demand <- function(q)  I1 + (S1*q)
+high_demand <- function(q) I2 + (S2*q)
+
+# Determines the 'dominate' curve. This only works for linear models
+demand_dom <- function(q){
+  if (I1==I2){0}
+  else if(I1>I2){low_demand(q)}
+  else if(I2>I1){high_demand(q)}
 }
+# Determines q such that high demand and low demand are equal. Used to find
+# the kink in the curve. 
+intersect_point <- abs(uniroot(function(q){high_demand(q)-low_demand(q)},
+                            interval = c(0,1),extendInt = "yes")$root)
+
+# functional defintion of aggregate demand 
+# the function itself. When q is less than the interset, returns the 'dominant'
+agg_demand <- function(q) {ifelse(q<intersect_point,demand_dom(q),
+                                  lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
+}
+
+demand_dom_x_intersect <- uniroot(demand_dom,
+                                  interval = c(0,1),
+                                  extendInt = "yes")$root
+
+# functional definition of Supply
 supply <- function(q)  3 + (.0000*q)
-local_env_cost<- function(q) 1.5 + (.0000*q) # local MEC $ 1.50
-global_env_cost<- function(q) .50 + (.0000*q) # global MEC $.50
-total_env_cost<- function(q) 2+ (.0000*q)# total MEC $.50
 
-x<- 0:300 # define scale
+#functional definition of environmental costs
+local_env_cost_curve<- function(q) 1.5 + (.0000*q) # local MEC $ 1.50
+global_env_cost_curve<- function(q) .50 + (.0000*q) # global MEC $.50
+total_env_cost_curve<- function(q) 2+ (.0000*q)# total MEC $.50
 
 ```
 
-```{r}
+```{r plot_supply_demand}
 ggplot()+
-  geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars))+
-  stat_function(aes(x, color = "Low"), fun = low_demand)+ 
-  geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars))+
-  stat_function(aes(x, color = "high"), fun = high_demand)+
-  geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars))+
-  stat_function(aes(x, color = "Aggregrate"), fun = agg_demand)+
-  stat_function(aes(x, color = "supply"), fun = supply)  +
-  xlim(0,200000)+ 
+  geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars),color="red")+
+  stat_function(aes(x=0, color = "Low Curve"), fun = low_demand)+ 
+  geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars),color="blue")+
+  stat_function(aes(x=0, color = "High Curve"), fun = high_demand)+
+  geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars),color="green")+
+  stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand)+
+  stat_function(aes(x=0, color = "supply Curve"), fun = supply)  +
+  xlim(0,800000)+ 
   scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
-
-
 ```
+1. Answer the following Questions:
 
-What is the “benefit” to consumers under the status quo? What is
-the “benefit” to producers under the status quo? 
+a. What is the aggregate daily demand curve for gasoline? 
+
+$P=`r round(demand_dom(0))``r round(-demand_dom(0)/demand_dom_x_intersect,digits=6)`Q  \text{ when }Q<`r comma(intersect_point)`$
+
+$P=`r round(lm_agg$coefficients[1])``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point)`$
+
+
+b. What is the supply curve for gasoline? 
+
+$P=3$
+
+c. What is the “benefit” to consumers under the status quo?
+    
 ```{r}
 # find intersect of aggregate curve at P = $3.00 Q = 587482.43
 agg_curve_intersect <- uniroot(function(q){agg_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+
+# integrate to find total area under agg demand curve 
+gross_consumer_benefit <- integrate(agg_demand,lower=0,upper=agg_curve_intersect)$value
+
+# integrate under the supply curve
+producer_benefit <- integrate(supply,lower=0,upper=agg_curve_intersect)$value
   
-```
+# subtract gross_consumer and producer to find net consumer benefit
+net_consumer_benefit <- gross_consumer_benefit - producer_benefit
+```    
 
-What is the environmental cost
-under the status quo (locally and in the rest of the world)?
+Net Consumer Benefit $=\$`r comma(net_consumer_benefit)`$
 
+d. What is the “benefit” to producers under the status quo? 
+
+Producer Benefit $=\$`r comma(producer_benefit)`$
+
+e. What is the environmental cost under the status quo (locally and in the rest of the world)?
 
 ```{r}
-integrate(local_env_cost, 0, agg_curve_intersect)$value # 881223.6
-integrate(global_env_cost, 0, agg_curve_intersect)$value # 293741.2
-integrate(total_env_cost, 0, agg_curve_intersect)$value # 1174965
-
+# integrate under each MEC from 0 to the agggrate curve intersect with supply curve
+local_env_cost <- integrate(local_env_cost_curve, 0, agg_curve_intersect)$value # 881223.6
+global_env_cost <- integrate(global_env_cost_curve, 0, agg_curve_intersect)$value # 293741.2
+total_env_cost <-  integrate(total_env_cost_curve, 0, agg_curve_intersect)$value # 1174965
 ```
 
+Local Environmental Cost  $=\$`r comma(local_env_cost)`$
+
+Global Environmental Cost $=\$`r comma(global_env_cost)`$
+
+Total Environmental Cost  $=\$`r comma(total_env_cost)`$
+
 ---
-2. How is the current consumer benefit divided between “High” and “Low” income
-consumers?
+
+2. How is the current consumer benefit divided between “High” and “Low” income consumers?
+
+---
+
+3. A gas tax of $1.00/gal. is proposed. What would be the effects of this tax on:
+    a. The amount of gasoline produced and consumed.
+    b. The price of gasoline.
+    c. Welfare of “High” income consumers.
+    d. Welfare of “Low” income consumers.
+    e. Welfare of gas producers.
+    f. Local environmental damage.
+    g. Rest of world environmental damage.
+    h. Total revenue generated by the tax.
+
+---
+
+4. Now, assume that all revenue from a tax will be redistributed to the two groups in proportion to their pre-tax consumption of gas. For example, if 80% of the gas was consumed by High income consumers, then they get 80% of the tax revenue. Also assume that “Low” income consumers bear all local environmental costs. For a range of gas taxes (ranging from $0 - $5.00/gal), calculate the effects of the tax on:
+    a. Overall welfare of “High” income consumers
+    b. Overall welfare of “Low” income consumers
+    c. Gas producers
+
+---
+
+5. A new electric car technology is invented and it lowers the demand curves of all income groups by half (vertically). Under these new demand curves, what are the effects on:
+    a. Gas consumption by “High” income consumers
+    b. Gas consumption by “Low” income consumers
+    c. Gas price
+    d. Local environmental damage from gasoline
+    e. Rest of world environmental damage from gasoline
+
+---
+
+6. Compare two situations to determine what value of T (i.e. what gas tax) makes the local environmental quality equal between these two situations?: 
+    a. Gas tax of $T/gal. but no electric car technology and
+    b. No gas tax but with electric car technology. 
