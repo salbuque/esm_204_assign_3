@@ -264,12 +264,29 @@ low_prop <- low_curve_intersect/agg_curve_intersect
 high_prop <- high_curve_intersect/agg_curve_intersect 
 
 #   - the aggregate quantity consumed for a given tax rate to be used by finding local env cost
+#   - the tax revenue for a given tax rate to find the tax redistribution
 # 
 # To do this lets make a function where tax is the variable t. Then we will construct a dataframe 
 # which calculates between the range of 0-5, then we can plot it. We will need a function for both
 # the high and low consumers
 
-high_tax_fun <- function(t) {
+
+high_tax_df <- function(t) {
+  #define the variable tax supply curve function
+  supply_tax_var <- function(t,q) {supply(q)+t}
+  
+  #find the new aggregate curve intersect based on the tax
+  agg_tax_curve_intersect_var <- uniroot(function(q){agg_demand(q)-supply_tax_var(q)},interval = c(0,1),extendInt = "yes")$root
+  
+  #tax times the quantity
+  total_tax_revenue <- t*agg_tax_curve_intersect_var
+  
+  #redistribution of taxes
+  redis_low <- low_prop * total_tax_revenue
+  redis_high <- high_prop * total_tax_revenue
+  
+    
+  }
   
 }
 
