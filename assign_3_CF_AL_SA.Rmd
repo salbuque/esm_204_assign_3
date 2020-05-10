@@ -14,6 +14,7 @@ library(ggplot2)
 library(wesanderson)
 library(dplyr)
 library(scales)
+library(purrr)
 ```
 
 ```{r read}
@@ -271,12 +272,12 @@ high_prop <- high_curve_intersect/agg_curve_intersect
 # the high and low consumers
 
 
-high_tax_df <- function(t) {
-  #define the variable tax supply curve function
-  supply_tax_var <- function(t,q) {supply(q)+t}
+tax_fun <- function(t) {
   
   #find the new aggregate curve intersect based on the tax
-  agg_tax_curve_intersect_var <- uniroot(function(q){agg_demand(q)-supply_tax_var(q)},interval = c(0,1),extendInt = "yes")$root
+  agg_tax_curve_intersect_var <- uniroot(function(q){agg_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
+  high_tax_curve_intersect_var <- uniroot(function(q){high_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
+  low_tax_curve_intersect_var <- uniroot(function(q){low_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
   
   #tax times the quantity
   total_tax_revenue <- t*agg_tax_curve_intersect_var
@@ -285,10 +286,25 @@ high_tax_df <- function(t) {
   redis_low <- low_prop * total_tax_revenue
   redis_high <- high_prop * total_tax_revenue
   
+  local_env_cost_tax_var <- integrate(local_env_cost_curve,lower=0,upper=agg_tax_curve_intersect_var)$value
+  
+  high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value + redis_high
+  low_welfare_var <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect_var)$value +redis_low -local_env_cost_tax_var
+  producer_welfare_var <- integrate(supply,lower=0,upper=agg_tax_curve_intersect_var)$value
+  
+  return(data.frame(tax=t,high_welfare = high_welfare_var, low_welfare = low_welfare_var, producer_welfare = producer_welfare_var))
     
   }
   
-}
+tax_df <- purrr::map_dfr(seq(from=0.01,to=15,by=0.01),tax_fun)
+```
+
+
+```{r}
+ggplot()+
+  geom_line(data=tax_df,aes(x=tax,y=producer_welfare,color="Producer Welfare"))+
+  geom_line(data=tax_df,aes(x=tax,y=high_welfare,color="High Welfare"))+
+  geom_line(data=tax_df,aes(x=tax,y=low_welfare,color="Low Welfare"))
 
 ```
 
