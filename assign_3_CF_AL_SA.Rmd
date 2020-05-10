@@ -69,9 +69,13 @@ agg_demand <- function(q) {ifelse(q<intersect_point,demand_dom(q),
 demand_dom_x_intersect <- uniroot(demand_dom,
                                   interval = c(0,1),
                                   extendInt = "yes")$root
-
+# finding the supply curve requires us to find the point at which the agg curve the price is 
+# equal to three. We know the current price is untaxed and equal to three.
+current_price <- 3
+supply_agg_intersect <- uniroot(function(q){agg_demand(q)-current_price}, interval = c(0,1), extendInt = "yes")$root
+supply_slope <- current_price/supply_agg_intersect
 # functional definition of Supply
-supply <- function(q)  3 + (.0000*q)
+supply <- function(q){q*supply_slope} 
 
 #functional definition of environmental costs
 local_env_cost_curve<- function(q) 1.5 + (.0000*q) # local MEC $ 1.50
@@ -96,14 +100,14 @@ ggplot()+
 
 a. What is the aggregate daily demand curve for gasoline? 
 
-$P=`r round(demand_dom(0))``r round(-demand_dom(0)/demand_dom_x_intersect,digits=6)`Q  \text{ when }Q<`r comma(intersect_point)`$
+$P=`r round(demand_dom(0),digits=3)``r round(-demand_dom(0)/demand_dom_x_intersect,digits=8)`Q  \text{ when }Q<`r comma(intersect_point)`$
 
-$P=`r round(lm_agg$coefficients[1])``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point)`$
+$P=`r round(lm_agg$coefficients[1],digits=3)``r round(lm_agg$coefficients[2],digits=8)`Q\text{ when } Q\geq`r comma(intersect_point)`$
 
 
 b. What is the supply curve for gasoline? 
 
-$P=3$
+$P= `r round(supply_slope,digits=8)`Q$
 
 c. What is the “benefit” to consumers under the status quo?
     
@@ -159,8 +163,6 @@ High Consumer Benefit $=\$`r comma(high_gross_consumer_benefit)`$
 Low Consumer Benefit $=\$`r comma(low_gross_consumer_benefit)`$
 
 ---
-
-Anthony
 
 3. A gas tax of \$1.00/gal. is proposed. What would be the effects of this tax on:
   a. The amount of gasoline produced and consumed.
@@ -236,8 +238,6 @@ Total Environmental Cost with tax  $=\$`r comma(total_env_cost_tax)`$
 
 
 ---
-
-Anthony
 
 4. Now, assume that all revenue from a tax will be redistributed to the two groups in proportion to their pre-tax consumption of gas. For example, if 80% of the gas was consumed by High income consumers, then they get 80% of the tax revenue. Also assume that “Low” income consumers bear all local environmental costs. For a range of gas taxes (ranging from \$0 - \$5.00/gal), calculate the effects of the tax on:
   a. Overall welfare of “High” income consumers
