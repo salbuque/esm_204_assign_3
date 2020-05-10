@@ -297,7 +297,7 @@ high_curve_intersect_h <- uniroot(function(q){high_demand_h(q)-supply(q)},interv
 low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 
 ```
-# HELP ANTHONY - IN LINE REFERENCING DRAMA
+
   a. Gas consumption by “High” income consumers  $=`r comma(high_curve_intersect_h)`$   
   
   b. Gas consumption by “Low” income consumers $=`r comma(low_curve_intersect_h)`$
