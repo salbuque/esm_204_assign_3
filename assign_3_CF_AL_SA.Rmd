@@ -309,10 +309,10 @@ intersect_point_h <- abs(uniroot(function(q){high_demand_h(q)-low_demand_h(q)},
 # functional defintion of new aggregate demand 
 # the function itself. When q is less than the interset, returns the 'dominant'
 agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom_h(q),
-                                  lm_agg$coefficients[1]/2 + (lm_agg$coefficients[2]/2*q))
+                                  lm_agg$coefficients[1]/2 + (lm_agg$coefficients[2]*q))
 }
 
-demand_dom_x_intersect_h <- uniroot(demand_dom,
+demand_dom_x_intersect_h <- uniroot(demand_dom_h,
                                   interval = c(0,1),
                                   extendInt = "yes")$root
 ```
@@ -321,7 +321,7 @@ Aggregate Curve when Demand is decreased by 50%
 
 $P=`r round(demand_dom_h(0))``r round(-demand_dom_h(0)/demand_dom_x_intersect_h,digits=6)`Q  \text{ when }Q<`r comma(intersect_point_h)`$
 
-$P=`r round(lm_agg$coefficients[1]/2)``r round(lm_agg$coefficients[2]/2,digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
+$P=`r round(lm_agg$coefficients[1]/2)``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
 
 
 
@@ -332,9 +332,29 @@ high_curve_intersect_h <- uniroot(function(q){high_demand_h(q)-supply(q)},interv
 low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 
 ```
-  a. Gas consumption by “High” income consumers $=\$`r comma(high_curve_intersect_h)`$
+# HELP ANTHONY - IN LINE REFERENCING DRAMA
+  a. Gas consumption by “High” income consumers  $=`r comma(high_curve_intersect_h)`$   
   
-  b. Gas consumption by “Low” income consumers $=\$`r comma(low_curve_intersect_h)`$
+  b. Gas consumption by “Low” income consumers $=`r comma(low_curve_intersect_h)`$
+
+  c. Gas price
+  
+```{r}
+#New Agg curve intersect with supply curve P = 440637.96
+agg_curve_intersect_h <- uniroot(function(q){agg_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+```
+
+```{r}
+# integrate under each MEC from 0 to the new agggrate curve intersect with supply curve
+local_env_cost_h <- integrate(local_env_cost_curve, 0, agg_curve_intersect_h)$value
+
+global_env_cost_h <-  integrate(global_env_cost_curve, 0, agg_curve_intersect_h)$value 
+
+```
+
+  d. Local environmental damage from gasoline  $=`r comma(local_env_cost_h)`$
+  
+  e. Rest of world environmental damage from gasoline  $=`r comma(global_env_cost_h)`$
 
 ```{r}
 # Visualize
@@ -342,13 +362,9 @@ ggplot()+
   stat_function(aes(x=0, color = "Low Curve"), fun = low_demand_h)+
   stat_function(aes(x=0, color = "High Curve"), fun = high_demand_h)+
   stat_function(aes(x=0, color = "supply Curve"), fun = supply)+ stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand_h)+ 
-xlim(0,800000)+ 
-  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
+xlim(0,400000)+ 
+  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10))
 ```
-
-  c. Gas price
-  d. Local environmental damage from gasoline
-  e. Rest of world environmental damage from gasoline
 
 ---
 
