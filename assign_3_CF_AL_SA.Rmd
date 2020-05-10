@@ -169,8 +169,10 @@ Low Consumer Benefit $=\$`r comma(low_gross_consumer_benefit)`$
 
 
 ```{r}
+# Defining the tax rate
+tax <- 1
 #functional supply curve with added tax
-supply_tax <- function(q)  4 + 0.0000*q
+supply_tax <- function(q){supply(q)+tax}
 
 #Agg curve intersect with new tax supply curve
 agg_tax_curve_intersect <- uniroot(function(q){agg_demand(q)-supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
@@ -182,7 +184,10 @@ Quantity Produced and consumed $=`r comma(agg_tax_curve_intersect)`$
 
   b. The price of gasoline.
 
-The price would be increased to \$4.00/gal as opposed to without tax is \$3.00/gal
+```{r}
+
+```
+
 
   c. Welfare of “High” income consumers.
     
