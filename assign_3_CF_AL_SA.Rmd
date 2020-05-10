@@ -368,6 +368,50 @@ xlim(0,400000)+
 
 ---
 
-6. Compare two situations to determine what value of T (i.e. what gas tax) makes the local environmental quality equal between these two situations?: 
-  a. Gas tax of \$T/gal. but no electric car technology and
-  b. No gas tax but with electric car technology. 
+6. Compare two situations: 
+ 
+  a. Total quantity of gasoline consumed with gas tax of \$1/gal. but no electric car technology$=`rcomma(agg_tax_curve_intersect)`$
+  
+  b. Total quantity of gasoline consumed with no gas tax but with electric car technology$=`rcomma(agg_curve_intersect_h)`$
+  
+  
+```{r}
+consumption_difference<- agg_curve_intersect_h - agg_curve_intersect
+# intercept w/ electric cars = 293,741; is smaller than intercept without electric cars
+```
+
+Determine what value of tax makes the local environmental quality equal between these two situations. Or in other words, what tax will lower the Q\* for the no electric cars scenario to the Q* in the electric car scenario. When the quantity consumer is the same, the environmental cost will also be equal. 
+
+```{r}
+# Find Price from no electric car aggregate curve when Q*= 293,741 electric car Q*
+p_tax_increase <- agg_demand(agg_curve_intersect_h) 
+```
+
+
+```{r}
+# Solve p = supply()+ tax; for tax by rearranging now that we know our P* and Q* in the no electric cars scenario 
+increase_tax<- p_tax_increase- supply_slope*agg_curve_intersect_h
+supply_increase_tax <- function(q){supply(q)+increase_tax}
+
+#Agg curve intersect with adjusted tax supply curve
+agg_tax_increase_curve_intersect <- uniroot(function(q){agg_demand(q)-supply_increase_tax(q)},interval = c(0,1),extendInt = "yes")$root
+
+# Check that environmental cost is equal for both scenarios with new_tax
+#Environmental Without electric cars + new tax 
+local_env_cost_increase_tax <- integrate(local_env_cost_curve, 0, agg_tax_increase_curve_intersect)$value 
+
+# 440611.82
+```
+ 
+  d. Local environmental damage from gasoline  $=`r comma(local_env_cost_increase_tax)`$
+  
+  e. Rest of world environmental damage from gasoline  $=`r comma(global_env_cost_h`$
+
+```{r}
+ggplot()+
+  stat_function(aes(x=0, color = "Low Curve"), fun = low_demand_h)+
+  stat_function(aes(x=0, color = "High Curve"), fun = high_demand_h)+
+  stat_function(aes(x=0, color = "Supply Curve"), fun = supply)+ stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand_h)+ 
+xlim(0,400000)+ 
+  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10))
+```
