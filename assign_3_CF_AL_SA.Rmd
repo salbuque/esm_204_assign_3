@@ -1,7 +1,10 @@
 ---
 title: "ESM204 Assignment 3"
 author: "Simone Albuquerque, Claudia Flores, and Anthony Luna"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
 ---
 
 
