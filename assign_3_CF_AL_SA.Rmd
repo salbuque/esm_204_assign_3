@@ -126,7 +126,7 @@ producer_benefit <- integrate(supply,lower=0,upper=agg_curve_intersect)$value
 net_consumer_benefit <- gross_consumer_benefit - producer_benefit
 ```    
 
-Consumer Benefit $=\$`r comma(gross_consumer_benefit)`$
+Consumer Benefit $=\$`r comma(net_consumer_benefit)`$
 
 d. What is the “benefit” to producers under the status quo? 
 
@@ -155,13 +155,20 @@ Total Environmental Cost  $=\$`r comma(total_env_cost)`$
 high_curve_intersect <- uniroot(function(q){high_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 low_curve_intersect <- uniroot(function(q){low_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 
+high_producer_benefit <- integrate(supply,lower=0,upper=high_curve_intersect)$value
+low_producer_benefit <- integrate(supply,lower=0,upper=low_curve_intersect)$value
+
+
 high_gross_consumer_benefit <- integrate(high_demand,lower=0,upper=high_curve_intersect)$value
 low_gross_consumer_benefit <- integrate(low_demand,lower=0,upper=low_curve_intersect)$value
+
+high_net_consumer_benefit <- high_gross_consumer_benefit - high_producer_benefit
+low_net_consumer_benefit <- low_gross_consumer_benefit - low_producer_benefit
 ```
 
-High Consumer Benefit $=\$`r comma(high_gross_consumer_benefit)`$
+High Consumer Benefit $=\$`r comma(high_net_consumer_benefit)`$
 
-Low Consumer Benefit $=\$`r comma(low_gross_consumer_benefit)`$
+Low Consumer Benefit $=\$`r comma(low_net_consumer_benefit)`$
 
 ---
 
@@ -199,20 +206,29 @@ Quantity Produced and consumed $=`r dollar(tax_price)`$
 high_tax_curve_intersect <- uniroot(function(q){high_demand(q)-supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
 low_tax_curve_intersect <- uniroot(function(q){low_demand(q)-  supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
 
+#Producer Benefit (does not include tax)
+
+high_producer_benefit_tax <- integrate(supply,lower=0,upper=high_tax_curve_intersect)$value
+low_producer_benefit_tax <- integrate(supply,lower=0,upper=low_tax_curve_intersect)$value
+
+# Total Consumer taxes, incase the welfare is total benefit minus taxes...
+high_tax_total <- high_tax_curve_intersect*tax
+low_tax_total <- low_tax_curve_intersect*tax
+
 # Total consumer benefit under new tax paradigm
 high_gross_consumer_welfare_tax <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect)$value
 low_gross_consumer_welfare_tax <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect)$value
 
-# Total Consumer taxes, incase the welfare is total benefit minus taxes...
-high_tax_total <- high_tax_curve_intersect
-low_tax_total <- low_tax_curve_intersect
+# Net Consumer Benefit
+high_net_consumer_welfare_tax <- high_gross_consumer_welfare_tax - high_producer_benefit_tax - high_tax_total
+low_net_consumer_welfare_tax <- low_gross_consumer_welfare_tax - low_producer_benefit_tax - low_tax_total
 ```
 
-High income consumer welfare $=\$ `r comma(high_gross_consumer_welfare_tax)`$
+High income consumer welfare $=\$ `r comma(high_net_consumer_welfare_tax)`$
 
   d. Welfare of “Low” income consumers.
 
-Low income consumer welfare $\$ =`r comma(low_gross_consumer_welfare_tax)`$
+Low income consumer welfare $\$ =`r comma(low_net_consumer_welfare_tax)`$
 
   e. Welfare of gas producers.
 
@@ -288,15 +304,28 @@ tax_fun <- function(t) {
   
   local_env_cost_tax_var <- integrate(local_env_cost_curve,lower=0,upper=agg_tax_curve_intersect_var)$value
   
-  high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value + redis_high
-  low_welfare_var <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect_var)$value +redis_low -local_env_cost_tax_var
-  producer_welfare_var <- integrate(supply,lower=0,upper=agg_tax_curve_intersect_var)$value
+  high_producer_welfare_var <- integrate(supply,lower=0,upper=high_tax_curve_intersect_var)$value  
+  low_producer_welfare_var <- integrate(supply,lower=0,upper=low_tax_curve_intersect_var)$value  
   
-  return(data.frame(tax=t,high_welfare = high_welfare_var, low_welfare = low_welfare_var, producer_welfare = producer_welfare_var))
+  high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value + redis_high - high_producer_welfare_var
+  low_welfare_var <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect_var)$value +redis_low -local_env_cost_tax_var- low_producer_welfare_var
+
+  
+  return(data.frame(tax=t,
+                    high_welfare = high_welfare_var,
+                    low_welfare = low_welfare_var,
+                    producer_welfare =  low_producer_welfare_var+high_producer_welfare_var,
+                    low_producer_welfare= low_producer_welfare_var,
+                    high_producer_welfare= high_producer_welfare_var))
     
   }
   
 tax_df <- purrr::map_dfr(seq(from=0.01,to=15,by=0.01),tax_fun)
+
+tax_pretty <- tax_df %>% 
+  filter(tax %in% c(0,1,2,3,4,5))
+
+kableExtra::kable(tax_pretty)
 ```
 
 
@@ -403,9 +432,9 @@ xlim(0,400000)+
 
 6. Compare two situations: 
  
-  a. Total quantity of gasoline consumed with gas tax of \$1/gal. but no electric car technology$=`rcomma(agg_tax_curve_intersect)`$
+  a. Total quantity of gasoline consumed with gas tax of \$1/gal. but no electric car technology$=`r comma(agg_tax_curve_intersect)`$
   
-  b. Total quantity of gasoline consumed with no gas tax but with electric car technology$=`rcomma(agg_curve_intersect_h)`$
+  b. Total quantity of gasoline consumed with no gas tax but with electric car technology$=`r comma(agg_curve_intersect_h)`$
   
   
 ```{r}
