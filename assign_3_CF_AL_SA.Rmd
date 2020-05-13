@@ -407,9 +407,8 @@ intersect_point_h <- abs(uniroot(function(q){high_demand_h(q)-low_demand_h(0)},
 
 # functional defintion of new aggregate demand 
 # the function itself. When q is less than the interset, returns the 'dominant'
-agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom_h(q),
-                                  lm_agg$coefficients[1]/2 + (lm_agg$coefficients[2]*q))
-}
+#agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom_h(q), lm_agg$coefficients[1]/2 + (lm_agg$coefficients[2]*q)) }
+
 agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom(q),((S2*I1_h+S1*I2_h)/(S2+S1))+((S1*S2)/(S1+S2))*q)
                                   #lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
 }
@@ -422,7 +421,7 @@ Aggregate Curve when Demand is decreased by 50%
 
 $P=`r round(demand_dom_h(0),digits=3)``r round(-demand_dom_h(0)/demand_dom_x_intersect_h,digits=6)`Q  \text{ when }Q<`r comma(intersect_point_h)`$
 
-$P=`r round(((S2*I1_h+S1*I2_h)/(S2+S1)))``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
+$P=`r round(((S2*I1_h+S1*I2_h)/(S2+S1)),digits=3)``r round(((S1*S2)/(S1+S2)),digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
 
 
 
