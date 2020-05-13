@@ -365,7 +365,12 @@ kableExtra::kable(tax_pretty)
 ggplot()+
   geom_line(data=tax_df,aes(x=tax,y=producer_welfare,color="Producer Welfare"))+
   geom_line(data=tax_df,aes(x=tax,y=high_welfare,color="High Welfare"))+
-  geom_line(data=tax_df,aes(x=tax,y=low_welfare,color="Low Welfare"))
+  geom_line(data=tax_df,aes(x=tax,y=low_welfare,color="Low Welfare")) +
+  labs(title = "Tax and Consumer Welfare", x = "Tax", y = "Welfare", colour = "Curve") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_bw() +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 15))) +
+  theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 15, l = 0)))
 
 ```
 
