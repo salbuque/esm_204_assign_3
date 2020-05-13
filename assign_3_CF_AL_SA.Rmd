@@ -65,13 +65,13 @@ demand_dom <- function(q){
 }
 # Determines q such that high demand and low demand are equal. Used to find
 # the kink in the curve. 
-intersect_point <- abs(uniroot(function(q){high_demand(q)-low_demand(q)},
-                            interval = c(0,1),extendInt = "yes")$root)
+intersect_point <- abs(uniroot(function(q){high_demand(q)-low_demand(0)},
+                            interval = c(-1,1),extendInt = "yes")$root)
 
 # functional defintion of aggregate demand 
 # the function itself. When q is less than the interset, returns the 'dominant'
-agg_demand <- function(q) {ifelse(q<intersect_point,demand_dom(q),
-                                  lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
+agg_demand <- function(q) {ifelse(q<intersect_point,demand_dom(q),((S2*I1+S1*I2)/(S2+S1))+((S1*S2)/(S1+S2))*q)
+                                  #lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
 }
 
 demand_dom_x_intersect <- uniroot(demand_dom,
@@ -102,7 +102,7 @@ ggplot()+
   stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand)+
   stat_function(aes(x=0, color = "supply Curve"), fun = supply)  +
   xlim(0,800000)+ 
-  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
+  scale_y_continuous(breaks=seq(from=0,to=18,by=1),limits = c(0,18))
 ```
 1. Answer the following Questions:
 
@@ -110,7 +110,7 @@ a. What is the aggregate daily demand curve for gasoline?
 
 $P=`r round(demand_dom(0),digits=3)``r round(-demand_dom(0)/demand_dom_x_intersect,digits=8)`Q  \text{ when }Q<`r comma(intersect_point)`$
 
-$P=`r round(lm_agg$coefficients[1],digits=3)``r round(lm_agg$coefficients[2],digits=8)`Q\text{ when } Q\geq`r comma(intersect_point)`$
+$P=`r round(((S2*I1+S1*I2)/(S2+S1)),digits=3)``r round(((S1*S2)/(S1+S2)),digits=8)`Q\text{ when } Q\geq`r comma(intersect_point)`$
 
 
 b. What is the supply curve for gasoline? 
@@ -165,8 +165,8 @@ Total Environmental Cost  $=\$`r comma(total_env_cost)`$
 2. How is the current consumer benefit divided between “High” and “Low” income consumers?
 
 ```{r}
-high_curve_intersect <- uniroot(function(q){high_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
-low_curve_intersect <- uniroot(function(q){low_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+high_curve_intersect <- uniroot(function(q){high_demand(q)-current_price},interval = c(0,1),extendInt = "yes")$root
+low_curve_intersect <- uniroot(function(q){low_demand(q)-current_price},interval = c(0,1),extendInt = "yes")$root
 
 #q_high_3<- inverse_high_demand(p_agg)
 #q_low_3<- inverse_low_demand(p_agg)
@@ -214,15 +214,15 @@ tax_price <- supply_tax(agg_tax_curve_intersect)
 
 ```
 
-Quantity Produced and consumed $=`r dollar(tax_price)`$
+Price of gasoline $=`r dollar(tax_price)`$
 
   c. Welfare of “High” income consumers.
     
 
 ```{r}
 # New curve intersects for high and low consumers
-high_tax_curve_intersect <- uniroot(function(q){high_demand(q)-supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
-low_tax_curve_intersect <- uniroot(function(q){low_demand(q)-  supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
+high_tax_curve_intersect <- uniroot(function(q){high_demand(q)-tax_price},interval = c(0,1),extendInt = "yes")$root
+low_tax_curve_intersect <- uniroot(function(q){low_demand(q)-  tax_price},interval = c(0,1),extendInt = "yes")$root
 
 #Producer Benefit (does not include tax)
 high_producer_benefit_tax <- tax_price*high_tax_curve_intersect - integrate(supply_tax,lower=0,upper=high_tax_curve_intersect)$value
@@ -252,7 +252,7 @@ Low income consumer welfare $\$ =`r comma(low_net_consumer_welfare_tax)`$
 
 ```{r}
 # Producer welfare
-producer_tax_welfare <- tax_price*agg_tax_curve_intersect - integrate(supply_tax,lower=0,upper=agg_tax_curve_intersect)$value
+producer_tax_welfare <- tax_price*agg_tax_curve_intersect - integrate(supply,lower=0,upper=agg_tax_curve_intersect)$value - (tax*agg_tax_curve_intersect)
 ```
 
 Producer consumer welfare $=\$ `r comma(producer_tax_welfare)`$
@@ -293,8 +293,8 @@ Total tax revenue  $=\$`r comma(tax_revenue)`$
 # To do this, we need to find:
 #   - the proportion of gas consumption of high and low users
 
-low_curve_intersect <- uniroot(function(q){low_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
-high_curve_intersect <- uniroot(function(q){high_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+low_curve_intersect <- uniroot(function(q){low_demand(q)-current_price},interval = c(0,1),extendInt = "yes")$root
+high_curve_intersect <- uniroot(function(q){high_demand(q)-current_price},interval = c(0,1),extendInt = "yes")$root
 low_prop <- low_curve_intersect/agg_curve_intersect 
 high_prop <- high_curve_intersect/agg_curve_intersect 
 
@@ -310,11 +310,14 @@ tax_fun <- function(t) {
   
   #find the new aggregate curve intersect based on the tax
   agg_tax_curve_intersect_var <- uniroot(function(q){agg_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
-  high_tax_curve_intersect_var <- uniroot(function(q){high_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
-  low_tax_curve_intersect_var <- uniroot(function(q){low_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
+
   
   #current price
   price_var <- agg_demand(agg_tax_curve_intersect_var)
+  
+  #intersects for high and low
+  high_tax_curve_intersect_var <- uniroot(function(q){high_demand(q)-price_var},interval = c(0,1),extendInt = "yes")$root
+  low_tax_curve_intersect_var <- uniroot(function(q){low_demand(q)-price_var},interval = c(0,1),extendInt = "yes")$root  
   
   #tax times the quantity
   total_tax_revenue <- t*agg_tax_curve_intersect_var
@@ -330,8 +333,7 @@ tax_fun <- function(t) {
   
   local_env_cost_tax_var <- integrate(local_env_cost_curve,lower=0,upper=agg_tax_curve_intersect_var)$value
   
-  high_producer_welfare_var <- price_var*high_tax_curve_intersect_var-integrate(supply,lower=0,upper=high_tax_curve_intersect_var)$value  
-  low_producer_welfare_var <- price_var*low_tax_curve_intersect_var-integrate(supply,lower=0,upper=low_tax_curve_intersect_var)$value  
+  agg_producer_welfare_var <- price_var*agg_tax_curve_intersect_var-integrate(supply,lower=0,upper=agg_tax_curve_intersect_var)$value-(t*agg_tax_curve_intersect_var)
   
   high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value - price_var*high_tax_curve_intersect_var + redis_high
   
@@ -339,16 +341,15 @@ tax_fun <- function(t) {
 
   
   return(data.frame(tax=t,
+                    tax_revenue=total_tax_revenue,
                     agg_intersect = agg_tax_curve_intersect_var,
                     high_intersect = high_tax_curve_intersect_var,
-                    low_interset = low_tax_curve_intersect_var,
+                    low_intersect = low_tax_curve_intersect_var,
                     local_env_cost = local_env_cost_tax_var,
                     price=price_var,
                     high_welfare = high_welfare_var,
                     low_welfare = low_welfare_var,
-                    producer_welfare =  low_producer_welfare_var+high_producer_welfare_var,
-                    low_producer_welfare= low_producer_welfare_var,
-                    high_producer_welfare= high_producer_welfare_var))
+                    producer_welfare =  agg_producer_welfare_var))
     
   }
   
@@ -357,7 +358,7 @@ tax_df <- purrr::map_dfr(seq(from=0,to=15,by=0.01),tax_fun)
 tax_pretty <- tax_df %>% 
   filter(tax %in% c(0,1,2,3,4,5))
 
-kableExtra::kable(tax_pretty)
+kableExtra::kable(tax_pretty) %>% kableExtra::kable_styling()
 ```
 
 
@@ -396,7 +397,7 @@ demand_dom_h <- function(q){
   else if(I2_h>I1_h){high_demand_h(q)}
 }
 # Determines q such that the new high demand and low demand are equal. #Used to find the kink in the curve. 
-intersect_point_h <- abs(uniroot(function(q){high_demand_h(q)-low_demand_h(q)},
+intersect_point_h <- abs(uniroot(function(q){high_demand_h(q)-low_demand_h(0)},
                             interval = c(0,1),extendInt = "yes")$root)
 
 # functional defintion of new aggregate demand 
@@ -404,7 +405,9 @@ intersect_point_h <- abs(uniroot(function(q){high_demand_h(q)-low_demand_h(q)},
 agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom_h(q),
                                   lm_agg$coefficients[1]/2 + (lm_agg$coefficients[2]*q))
 }
-
+agg_demand_h <- function(q) {ifelse(q<intersect_point_h,demand_dom(q),((S2*I1_h+S1*I2_h)/(S2+S1))+((S1*S2)/(S1+S2))*q)
+                                  #lm_agg$coefficients[1] + (lm_agg$coefficients[2]*q))
+}
 demand_dom_x_intersect_h <- uniroot(demand_dom_h,
                                   interval = c(0,1),
                                   extendInt = "yes")$root
@@ -412,17 +415,17 @@ demand_dom_x_intersect_h <- uniroot(demand_dom_h,
 
 Aggregate Curve when Demand is decreased by 50% 
 
-$P=`r round(demand_dom_h(0))``r round(-demand_dom_h(0)/demand_dom_x_intersect_h,digits=6)`Q  \text{ when }Q<`r comma(intersect_point_h)`$
+$P=`r round(demand_dom_h(0),digits=3)``r round(-demand_dom_h(0)/demand_dom_x_intersect_h,digits=6)`Q  \text{ when }Q<`r comma(intersect_point_h)`$
 
-$P=`r round(lm_agg$coefficients[1]/2)``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
+$P=`r round(((S2*I1_h+S1*I2_h)/(S2+S1)))``r round(lm_agg$coefficients[2],digits=6)`Q\text{ when } Q\geq`r comma(intersect_point_h)`$
 
 
 
 ```{r}
 # find intersect of high & Low curves at P = $3.00 
-high_curve_intersect_h <- uniroot(function(q){high_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+high_curve_intersect_h <- uniroot(function(q){high_demand_h(q)-current_price},interval = c(0,1),extendInt = "yes")$root
 
-low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-current_price},interval = c(0,1),extendInt = "yes")$root
 
 ```
 
@@ -434,7 +437,7 @@ low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-supply(q)},interval
   
 ```{r}
 #New Agg curve intersect with supply curve P = 440637.96
-agg_curve_intersect_h <- uniroot(function(q){agg_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+agg_curve_intersect_h <- uniroot(function(q){agg_demand_h(q)-current_price},interval = c(0,1),extendInt = "yes")$root
 adjusted_tax<- supply(agg_curve_intersect_h)
 ```
 
