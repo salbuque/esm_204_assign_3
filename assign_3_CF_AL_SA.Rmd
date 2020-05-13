@@ -94,20 +94,15 @@ total_env_cost_curve<- function(q) 2+ (.0000*q)# total MEC $.50
 
 ```{r plot_supply_demand}
 ggplot()+
-  geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars),color="cyan3", alpha = .2)+
-  stat_function(aes(x=0, color = "Low Consumer"), fun = low_demand)+ 
-  geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars),color="chartreuse3", alpha = .2)+
-  stat_function(aes(x=0, color = "High Consumer"), fun = high_demand)+
-  geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars),color="coral1", alpha = .2)+
-  stat_function(aes(x=0, color = "Aggregate"), fun = agg_demand, size = .8)+
-  stat_function(aes(x=0, color = "Supply"), fun = supply, size = .6)  +
+  geom_point(data = cost_gas_data, aes(x= q_low_gallons, y = price_dollars),color="red")+
+  stat_function(aes(x=0, color = "Low Curve"), fun = low_demand)+ 
+  geom_point(data = cost_gas_data, aes(x= q_high_gallons, y = price_dollars),color="blue")+
+  stat_function(aes(x=0, color = "High Curve"), fun = high_demand)+
+  geom_point(data = cost_gas_data, aes(x= q_aggregrate, y = price_dollars),color="green")+
+  stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand)+
+  stat_function(aes(x=0, color = "supply Curve"), fun = supply)  +
   xlim(0,800000)+ 
-  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18)) +
-  labs(title = "Gas Supply and Demand for Various Consumers", x = "Gallons", y = "Price USD", colour = "Curve") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme_bw() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 15))) +
-  theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 15, l = 0))) 
+  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,18))
 ```
 1. Answer the following Questions:
 
@@ -136,9 +131,12 @@ p_agg<- agg_demand(agg_curve_intersect)
 
 # integrate under the supply curve
 producer_benefit <- integrate(supply,lower=0,upper=agg_curve_intersect)$value
-  
+# Double check with geometry 
+producer_benefit_geom<- (p_agg*agg_curve_intersect)/2 # 881223.59
+
 # subtract gross_consumer and producer to find net consumer benefit
 net_consumer_benefit <- gross_consumer_benefit - (p_agg*agg_curve_intersect)
+
 ```    
 
 Consumer Benefit $=\$`r comma(net_consumer_benefit)`$
@@ -362,12 +360,7 @@ kableExtra::kable(tax_pretty)
 ggplot()+
   geom_line(data=tax_df,aes(x=tax,y=producer_welfare,color="Producer Welfare"))+
   geom_line(data=tax_df,aes(x=tax,y=high_welfare,color="High Welfare"))+
-  geom_line(data=tax_df,aes(x=tax,y=low_welfare,color="Low Welfare")) +
-  labs(title = "Tax and Consumer Welfare", x = "Tax", y = "Welfare", colour = "Curve") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme_bw() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 15))) +
-  theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 15, l = 0))) 
+  geom_line(data=tax_df,aes(x=tax,y=low_welfare,color="Low Welfare"))
 
 ```
 
@@ -438,6 +431,7 @@ low_curve_intersect_h <- uniroot(function(q){low_demand_h(q)-supply(q)},interval
 ```{r}
 #New Agg curve intersect with supply curve P = 440637.96
 agg_curve_intersect_h <- uniroot(function(q){agg_demand_h(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
+adjusted_tax<- supply(agg_curve_intersect_h)
 ```
 
 ```{r}
@@ -455,17 +449,11 @@ global_env_cost_h <-  integrate(global_env_cost_curve, 0, agg_curve_intersect_h)
 ```{r}
 # Visualize
 ggplot()+
-  stat_function(aes(x=0, color = "Low"), fun = low_demand_h)+
-  stat_function(aes(x=0, color = "High"), fun = high_demand_h)+
-  stat_function(aes(x=0, color = "Supply"), fun = supply, size = .6)+ 
-  stat_function(aes(x=0, color = "Aggregate"), fun = agg_demand_h, size = .8)+ 
+  stat_function(aes(x=0, color = "Low Curve"), fun = low_demand_h)+
+  stat_function(aes(x=0, color = "High Curve"), fun = high_demand_h)+
+  stat_function(aes(x=0, color = "supply Curve"), fun = supply)+ stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand_h)+ 
 xlim(0,400000)+ 
-  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10)) +
-  labs(title = "Gas Supply and Adjusted Demand for Various Consumers", x = "Gallons", y = "Price USD", colour = "Curve") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme_bw() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 15))) +
-  theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 15, l = 0))) 
+  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10))
 ```
 
 ---
@@ -511,15 +499,9 @@ local_env_cost_increase_tax <- integrate(local_env_cost_curve, 0, agg_tax_increa
 
 ```{r}
 ggplot()+
-  stat_function(aes(x=0, color = "Low"), fun = low_demand_h)+
-  stat_function(aes(x=0, color = "High"), fun = high_demand_h)+
-  stat_function(aes(x=0, color = "Supply"), fun = supply, size = .6)+ 
-  stat_function(aes(x=0, color = "Aggregate"), fun = agg_demand_h, size = .8)+ 
+  stat_function(aes(x=0, color = "Low Curve"), fun = low_demand_h)+
+  stat_function(aes(x=0, color = "High Curve"), fun = high_demand_h)+
+  stat_function(aes(x=0, color = "Supply Curve"), fun = supply)+ stat_function(aes(x=0, color = "Aggregrate Curve"), fun = agg_demand_h)+ 
 xlim(0,400000)+ 
-  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10)) +
-  labs(title = "?", x = "Gallons", y = "Price USD", colour = "Curve") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme_bw() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 15))) +
-  theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 15, l = 0))) 
+  scale_y_continuous(breaks=c(0,3,6,9,12,15,18),limits = c(0,10))
 ```
