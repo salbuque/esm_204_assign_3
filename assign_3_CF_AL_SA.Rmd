@@ -127,15 +127,15 @@ agg_curve_intersect <- uniroot(function(q){agg_demand(q)-supply(q)},interval = c
 gross_consumer_benefit <- integrate(agg_demand,lower=0,upper=agg_curve_intersect)$value
 
 #Find P* at that quantity
-p_agg<- agg_demand(agg_curve_intersect) 
+#p_agg<- agg_demand(agg_curve_intersect) 
 
 # integrate under the supply curve
-producer_benefit <- integrate(supply,lower=0,upper=agg_curve_intersect)$value
+producer_benefit <- current_price*agg_curve_intersect - integrate(supply,lower=0,upper=agg_curve_intersect)$value
 # Double check with geometry 
-producer_benefit_geom<- (p_agg*agg_curve_intersect)/2 # 881223.59
+#producer_benefit_geom<- (p_agg*agg_curve_intersect)/2 # 881223.59
 
 # subtract gross_consumer and producer to find net consumer benefit
-net_consumer_benefit <- gross_consumer_benefit - (p_agg*agg_curve_intersect)
+net_consumer_benefit <- gross_consumer_benefit - current_price*agg_curve_intersect
 
 ```    
 
@@ -168,19 +168,19 @@ Total Environmental Cost  $=\$`r comma(total_env_cost)`$
 high_curve_intersect <- uniroot(function(q){high_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 low_curve_intersect <- uniroot(function(q){low_demand(q)-supply(q)},interval = c(0,1),extendInt = "yes")$root
 
-q_high_3<- inverse_high_demand(p_agg)
-q_low_3<- inverse_low_demand(p_agg)
+#q_high_3<- inverse_high_demand(p_agg)
+#q_low_3<- inverse_low_demand(p_agg)
 
 #Take integral under the demand curve for total consumption & Benefit
-high_producer_benefit <- integrate(supply,lower=0,upper=high_curve_intersect)$value
-low_producer_benefit <- integrate(supply,lower=0,upper=low_curve_intersect)$value
+high_producer_benefit <- current_price*high_curve_intersect - integrate(supply,lower=0,upper=high_curve_intersect)$value
+low_producer_benefit <- current_price*low_curve_intersect - integrate(supply,lower=0,upper=low_curve_intersect)$value
 
 high_gross_consumer_benefit <- integrate(high_demand,lower=0,upper=high_curve_intersect)$value
 low_gross_consumer_benefit <- integrate(low_demand,lower=0,upper=low_curve_intersect)$value
 
 # Subtract costs from benefits 
-high_net_consumer_benefit <- high_gross_consumer_benefit - (p_agg*q_high_3)
-low_net_consumer_benefit <- low_gross_consumer_benefit - (p_agg*q_low_3)
+high_net_consumer_benefit <- high_gross_consumer_benefit - current_price*high_curve_intersect
+low_net_consumer_benefit <- low_gross_consumer_benefit - current_price*low_curve_intersect
 ```
 
 High Consumer Benefit $=\$`r comma(high_net_consumer_benefit)`$
@@ -200,7 +200,7 @@ tax <- 1
 supply_tax <- function(q){supply(q)+tax}
 
 #Agg curve intersect with new tax supply curve
-agg_tax_curve_intersect <- uniroot(function(q){agg_demand(q)-supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
+agg_tax_curve_intersect <- uniroot(function(q){agg_demand(q)-(supply(q)+tax)},interval = c(0,1),extendInt = "yes")$root
 
 
 ```
@@ -211,6 +211,7 @@ Quantity Produced and consumed $=`r comma(agg_tax_curve_intersect)`$
 
 ```{r}
 tax_price <- supply_tax(agg_tax_curve_intersect)
+
 ```
 
 Quantity Produced and consumed $=`r dollar(tax_price)`$
@@ -224,9 +225,8 @@ high_tax_curve_intersect <- uniroot(function(q){high_demand(q)-supply_tax(q)},in
 low_tax_curve_intersect <- uniroot(function(q){low_demand(q)-  supply_tax(q)},interval = c(0,1),extendInt = "yes")$root
 
 #Producer Benefit (does not include tax)
-
-high_producer_benefit_tax <- integrate(supply,lower=0,upper=high_tax_curve_intersect)$value
-low_producer_benefit_tax <- integrate(supply,lower=0,upper=low_tax_curve_intersect)$value
+high_producer_benefit_tax <- tax_price*high_tax_curve_intersect - integrate(supply_tax,lower=0,upper=high_tax_curve_intersect)$value
+low_producer_benefit_tax <-  tax_price*low_tax_curve_intersect - integrate(supply_tax,lower=0,upper=low_tax_curve_intersect)$value
 
 # Total Consumer taxes, incase the welfare is total benefit minus taxes...
 high_tax_total <- high_tax_curve_intersect*tax
@@ -235,15 +235,11 @@ low_tax_total <- low_tax_curve_intersect*tax
 # Total consumer benefit under new tax paradigm
 high_gross_consumer_welfare_tax <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect)$value
 low_gross_consumer_welfare_tax <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect)$value
-
-# get P* and q* for each curve 
-p_1_tax<- 4
-q_high_4<- inverse_high_demand(p_1_tax)
-q_low_4<- inverse_low_demand(p_1_tax)
-
+agg_gross_consumer_welfare_tax <- integrate(agg_demand,lower=0,upper=agg_tax_curve_intersect)$value
 # Net Consumer Benefit
-high_net_consumer_welfare_tax <- high_gross_consumer_welfare_tax - (p_1_tax*q_high_4)
-low_net_consumer_welfare_tax <- low_gross_consumer_welfare_tax - (p_1_tax*q_low_4)
+high_net_consumer_welfare_tax <- high_gross_consumer_welfare_tax - tax_price*high_tax_curve_intersect
+low_net_consumer_welfare_tax <- low_gross_consumer_welfare_tax - tax_price*low_tax_curve_intersect
+agg_net_consumer_welfare_tax <- agg_gross_consumer_welfare_tax - tax_price*agg_tax_curve_intersect 
 ```
 
 High income consumer welfare $=\$ `r comma(high_net_consumer_welfare_tax)`$
@@ -256,7 +252,7 @@ Low income consumer welfare $\$ =`r comma(low_net_consumer_welfare_tax)`$
 
 ```{r}
 # Producer welfare
-producer_tax_welfare <- integrate(supply,lower=0,upper=agg_tax_curve_intersect)$value
+producer_tax_welfare <- tax_price*agg_tax_curve_intersect - integrate(supply_tax,lower=0,upper=agg_tax_curve_intersect)$value
 ```
 
 Producer consumer welfare $=\$ `r comma(producer_tax_welfare)`$
@@ -317,12 +313,15 @@ tax_fun <- function(t) {
   high_tax_curve_intersect_var <- uniroot(function(q){high_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
   low_tax_curve_intersect_var <- uniroot(function(q){low_demand(q)-(supply(q)+t)},interval = c(0,1),extendInt = "yes")$root
   
+  #current price
+  price_var <- agg_demand(agg_tax_curve_intersect_var)
+  
   #tax times the quantity
   total_tax_revenue <- t*agg_tax_curve_intersect_var
   
   #Tax cost high & Low consumers
-high_tax_revenue <- t*high_tax_curve_intersect_var
-low_tax_revenue <- t*low_tax_curve_intersect_var
+  high_tax_revenue <- t*high_tax_curve_intersect_var
+  low_tax_revenue <- t*low_tax_curve_intersect_var
 
   
   #redistribution of taxes
@@ -331,14 +330,20 @@ low_tax_revenue <- t*low_tax_curve_intersect_var
   
   local_env_cost_tax_var <- integrate(local_env_cost_curve,lower=0,upper=agg_tax_curve_intersect_var)$value
   
-  high_producer_welfare_var <- integrate(supply,lower=0,upper=high_tax_curve_intersect_var)$value  
-  low_producer_welfare_var <- integrate(supply,lower=0,upper=low_tax_curve_intersect_var)$value  
+  high_producer_welfare_var <- price_var*high_tax_curve_intersect_var-integrate(supply,lower=0,upper=high_tax_curve_intersect_var)$value  
+  low_producer_welfare_var <- price_var*low_tax_curve_intersect_var-integrate(supply,lower=0,upper=low_tax_curve_intersect_var)$value  
   
-  high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value + redis_high - high_tax_revenue 
-  low_welfare_var <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect_var)$value +redis_low -local_env_cost_tax_var-low_tax_revenue
+  high_welfare_var <- integrate(high_demand,lower=0,upper=high_tax_curve_intersect_var)$value - price_var*high_tax_curve_intersect_var + redis_high
+  
+  low_welfare_var <- integrate(low_demand,lower=0,upper=low_tax_curve_intersect_var)$value - price_var*low_tax_curve_intersect_var  +redis_low -local_env_cost_tax_var
 
   
   return(data.frame(tax=t,
+                    agg_intersect = agg_tax_curve_intersect_var,
+                    high_intersect = high_tax_curve_intersect_var,
+                    low_interset = low_tax_curve_intersect_var,
+                    local_env_cost = local_env_cost_tax_var,
+                    price=price_var,
                     high_welfare = high_welfare_var,
                     low_welfare = low_welfare_var,
                     producer_welfare =  low_producer_welfare_var+high_producer_welfare_var,
@@ -370,7 +375,6 @@ ggplot()+
 
 ---
 
-Simone
 
 5. A new electric car technology is invented and it lowers the demand curves of all income groups by half (vertically). Under these new demand curves, what are the effects on:
 ```{r}
