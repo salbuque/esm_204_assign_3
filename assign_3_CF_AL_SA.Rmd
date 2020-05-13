@@ -352,7 +352,7 @@ tax_fun <- function(t) {
     
   }
   
-tax_df <- purrr::map_dfr(seq(from=0.01,to=15,by=0.01),tax_fun)
+tax_df <- purrr::map_dfr(seq(from=0,to=15,by=0.01),tax_fun)
 
 tax_pretty <- tax_df %>% 
   filter(tax %in% c(0,1,2,3,4,5))
